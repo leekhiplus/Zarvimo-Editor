@@ -64,7 +64,24 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --console=plain 2>&1 | tee build.log
+          exit "${PIPESTATUS[0]}"
+
+      - name: Show key build errors in the run Summary
+        if: failure() && env.PROJECT_DIR != ''
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          [ -f build.log ] || exit 0
+          {
+            echo '## Build failed - key errors'
+            echo
+            echo '```'
+            grep -E '^e: |AAPT|error: |Could not (resolve|find|download)|requires libraries|Duplicate class' build.log \
+              | sed -E 's#file:///home/runner/work/[^/]+/[^/]+/##' | head -40 || true
+            echo '---'
+            grep -E -A5 'What went wrong' build.log | head -20 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Collect APK
         run: |
