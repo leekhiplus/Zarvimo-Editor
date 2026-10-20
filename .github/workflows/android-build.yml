@@ -18,6 +18,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Works both ways:
+      #  1) project files are at the repo root, or
+      #  2) a single project .zip was uploaded to the repo root (it gets unzipped here).
       - name: Locate project (unzip if needed)
         run: |
           if [ -f settings.gradle.kts ] || [ -f settings.gradle ]; then
@@ -54,6 +57,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Build debug APK
         working-directory: ${{ env.PROJECT_DIR }}
